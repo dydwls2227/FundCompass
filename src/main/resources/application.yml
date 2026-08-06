@@ -1,0 +1,30 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: fundcompass
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fundcompass
+    username: ${DB_USERNAME:fundcompass}
+    password: ${DB_PASSWORD:localdev}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+
+bizinfo:
+  api:
+    base-url:
+      https://www.bizinfo.go.kr/uss/rss/bizinfoApi.do
+    key: ${BIZINFO_API_KEY:}
