@@ -49,6 +49,10 @@ public class Program {
     @Column(name = "apply_period_raw", length = 200)
     private String applyPeriodRaw;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deadline_type", nullable = false, length = 20)
+    private DeadlineType deadlineType;
+
     // applyPeroidRaw 에서 파싱
     @Column(name = "apply_start_date")
     private LocalDate applyStartDate;
@@ -93,4 +97,32 @@ public class Program {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public boolean needsUpdateFrom(Program source){
+        if(this.sourceUpdatedAt == null || source.sourceUpdatedAt == null){
+            return true;
+        }
+        return source.sourceUpdatedAt.isAfter(this.sourceUpdatedAt);
+    }
+
+    public void updateFrom(Program source){
+        this.name = source.name;
+        this.detailUrl = source.detailUrl;
+        this.summaryHtml = source.summaryHtml;
+        this.targetName = source.targetName;
+        this.applyPeriodRaw = source.applyPeriodRaw;
+        this.applyStartDate = source.applyStartDate;
+        this.applyEndDate = source.applyEndDate;
+        this.supervisingInstitution = source.supervisingInstitution;
+        this.executingInstitution = source.executingInstitution;
+        this.fieldLarge = source.fieldLarge;
+        this.fieldMiddle = source.fieldMiddle;
+        this.hashtags = source.hashtags;
+        this.applyMethod = source.applyMethod;
+        this.deadlineType = source.deadlineType;
+        this.contact = source.contact;
+        this.attachmentName = source.attachmentName;
+        this.sourceCreatedAt = source.sourceCreatedAt;
+        this.sourceUpdatedAt = source.sourceUpdatedAt;
+    }
 }

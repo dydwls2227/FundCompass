@@ -5,14 +5,14 @@ spring:
     name: fundcompass
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/fundcompass
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/fundcompass}
     username: ${DB_USERNAME:fundcompass}
     password: ${DB_PASSWORD:localdev}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
@@ -20,11 +20,19 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
+    org.hibernate.SQL: info
+    org.hibernate.orm.jdbc.bind: info
+    com.fundcompass.program.service.BizinfoProgramMapper: debug
 
 bizinfo:
   api:
     base-url:
       https://www.bizinfo.go.kr/uss/rss/bizinfoApi.do
     key: ${BIZINFO_API_KEY:}
+
+
+fundcompass:
+  scheduler:
+    program-sync:
+      enabled: ${PROGRAM_SYNC_ENABLED:false} # 배포에서 환경변수로만
+      cron: "0 30 4 * * *"
