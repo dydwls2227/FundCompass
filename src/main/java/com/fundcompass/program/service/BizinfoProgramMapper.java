@@ -5,7 +5,6 @@ import com.fundcompass.program.infra.dto.BizinfoProgramItem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -17,7 +16,7 @@ public class BizinfoProgramMapper {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Program toEntity(BizinfoProgramItem item) {
-        ApplyPeriod period = parseApplyPeriod(item.reqstBeginEndDe());
+        ApplyPeriodParser.ApplyPeriod period = ApplyPeriodParser.parse(item.reqstBeginEndDe());
 
         return Program.builder()
                 .pblancId(item.pblancId())
@@ -26,6 +25,7 @@ public class BizinfoProgramMapper {
                 .summaryHtml(item.bsnsSumryCn())
                 .targetName(truncate(item.trgetNm(), 500))
                 .applyPeriodRaw(truncate(item.reqstBeginEndDe(), 200))
+                .deadlineType(period.type())
                 .applyStartDate(period.start())
                 .applyEndDate(period.end())
                 .supervisingInstitution(truncate(item.jrsdInsttNm(), 200))
@@ -39,38 +39,6 @@ public class BizinfoProgramMapper {
                 .sourceCreatedAt(parseDateTime(item.creatPnttm()))
                 .sourceUpdatedAt(parseDateTime(item.updtPnttm()))
                 .build();
-    }
-
-    record ApplyPeriod(LocalDate start, LocalDate end) {
-        static ApplyPeriod empty() {
-            return new ApplyPeriod(null, null);
-        }
-    }
-
-
-    static ApplyPeriod parseApplyPeriod(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return ApplyPeriod.empty();
-        }
-
-        String[] parts = raw.split("~");
-        if (parts.length != 2) {
-            log.debug("신청기간 파싱 불가(구분자 없음): {}", raw);
-            return ApplyPeriod.empty();
-        }
-
-        LocalDate start = parseDate(parts[0].trim());
-        LocalDate end = parseDate(parts[1].trim());
-        return new ApplyPeriod(start, end);
-    }
-
-    private static LocalDate parseDate(String value) {
-        try {
-            return LocalDate.parse(value);
-        } catch (Exception e) {
-            log.debug("날짜 파싱 실패: {}", value);
-            return null;
-        }
     }
 
     private static LocalDateTime parseDateTime(String value) {
