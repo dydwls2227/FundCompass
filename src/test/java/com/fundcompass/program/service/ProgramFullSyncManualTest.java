@@ -23,4 +23,14 @@ public class ProgramFullSyncManualTest {
         System.out.println("DB 총 건수: " + programRepository.count());
         System.out.println("=".repeat(60));
     }
+
+    @Test
+    @DisplayName("전체 공고를 강제로 다시 채운다 (스키마 변경 후 사용)")
+    void 강제_재수집() {
+        var result = programSyncService.sync(0, true);
+
+        System.out.println("=".repeat(60));
+        System.out.println("강제 재수집 결과: " + result);
+        System.out.println("=".repeat(60));
+    }
 }

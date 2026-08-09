@@ -26,37 +26,46 @@ public class ProgramSyncService {
         }
     }
 
-    public SyncResult sync(int count){
+    public SyncResult sync(int count) {
+        return sync(count, false);
+    }
+
+    /**
+     * @param force true면 원본 수정일시와 무관하게 모든 공고를 갱신한다.
+     *              스키마에 컬럼을 추가한 뒤 기존 행을 다시 채울 때 사용한다.
+     */
+    public SyncResult sync(int count, boolean force) {
         List<BizinfoProgramItem> items = bizinfoClient.fetch(count);
 
         int inserted = 0, updated = 0, skipped = 0, failed = 0;
 
-        for(BizinfoProgramItem item : items){
-            try{
+        for (BizinfoProgramItem item : items) {
+            try {
                 Program incoming = mapper.toEntity(item);
                 Optional<Program> found = programRepository.findByPblancId(incoming.getPblancId());
 
-                if(found.isEmpty()){
+                if (found.isEmpty()) {
                     programRepository.save(incoming);
                     inserted++;
-                }else{
+                } else {
                     Program existing = found.get();
-                    if(existing.needsUpdateFrom(incoming)){
+                    if (force || existing.needsUpdateFrom(incoming)) {   // ← 여기만 변경
                         existing.updateFrom(incoming);
                         programRepository.save(existing);
                         updated++;
-                    }else{
+                    } else {
                         skipped++;
                     }
                 }
-            } catch(Exception e){
+            } catch (Exception e) {
                 failed++;
-                log.error("공고 처리 실패 (pblancId={}) : {}", item.pblancId(),e.getMessage());
+                log.error("공고 처리 실패 (pblancId={}): {}", item.pblancId(), e.getMessage());
             }
         }
 
         SyncResult result = new SyncResult(inserted, updated, skipped, failed);
-        log.info("공고 동기화 완료 - 전체 {}건 (신규 {}, 갱신{}, 변경없음 {}, 실패 {})", result.total(),inserted, updated, skipped, failed);
+        log.info("공고 동기화 완료{} - 전체 {}건 (신규 {}, 갱신 {}, 변경없음 {}, 실패 {})",
+                force ? " [강제]" : "", result.total(), inserted, updated, skipped, failed);
         return result;
     }
 }
