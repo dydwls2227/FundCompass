@@ -23,6 +23,8 @@ logging:
     org.hibernate.SQL: info
     org.hibernate.orm.jdbc.bind: info
     com.fundcompass.program.service.BizinfoProgramMapper: debug
+    org.apache.pdfbox: error
+    org.apache.fontbox: error
 
 bizinfo:
   api:
