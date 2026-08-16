@@ -14,6 +14,15 @@ public interface ProgramEligibilityRepository extends JpaRepository<ProgramEligi
 
     long countByStatus(ExtractionStatus status);
 
-    @Query("SELECT e.programId FROM ProgramEligibility e")
-    List<Long> findAllProgramIds();
+    /**
+     * 더 시도할 필요가 없는 공고. 성공했거나, 실패를 상한까지 반복한 경우다.
+     *
+     * <p>상태와 무관하게 전부 제외하면 일시적 오류(네트워크·5xx)로 남은 FAILED 행 하나가
+     * 그 공고를 영구히 배치에서 빼버린다.
+     */
+    @Query("""
+            SELECT e.programId FROM ProgramEligibility e
+            WHERE e.status = :succeeded OR e.attempts >= :maxAttempts
+            """)
+    List<Long> findSettledProgramIds(ExtractionStatus succeeded, int maxAttempts);
 }

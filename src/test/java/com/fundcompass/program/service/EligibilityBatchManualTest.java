@@ -31,8 +31,11 @@ class EligibilityBatchManualTest {
         System.out.println("=".repeat(72));
     }
 
-    /** 무료 티어 RPD 20. 그날 남은 쿼터에 맞춰 조정한다 */
-    private static final int BATCH_SIZE = 6;
+    /**
+     * 그날 남은 쿼터에 맞춰 조정한다. 코드 수정 없이 실행할 때 지정한다.
+     * {@code ./gradlew test --tests '...추출_쿼터만큼' -Dbatch.size=40}
+     */
+    private static final int BATCH_SIZE = Integer.getInteger("batch.size", 20);
 
     @Test
     @DisplayName("남은 쿼터만큼 추출")

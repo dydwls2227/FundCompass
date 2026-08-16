@@ -55,6 +55,10 @@ public class ProgramEligibility {
     @Column(name = "error_message", length = 500)
     private String errorMessage;
 
+    /** 누적 시도 횟수. 상한 미만인 FAILED 행은 다음 배치에서 다시 도전한다 */
+    @Column(nullable = false)
+    private Integer attempts;
+
     @Column(name = "extracted_at")
     private LocalDateTime extractedAt;
 
@@ -78,6 +82,7 @@ public class ProgramEligibility {
                 .modelId(modelId)
                 .promptChars(promptChars)
                 .elapsedMs((int) elapsedMs)
+                .attempts(1)
                 .extractedAt(LocalDateTime.now())
                 .build();
     }
@@ -91,9 +96,44 @@ public class ProgramEligibility {
                 .promptVersion(promptVersion)
                 .modelId(modelId)
                 .promptChars(promptChars)
-                .errorMessage(message == null ? null
-                        : message.substring(0, Math.min(message.length(), 500)))
+                .errorMessage(truncate(message))
+                .attempts(1)
                 .extractedAt(LocalDateTime.now())
                 .build();
+    }
+
+    /**
+     * 이미 있는 행을 성공으로 갱신한다. 이전 시도가 실패해 남긴 행을 덮어쓰는 경로다.
+     * 공고당 1행(유니크 제약)이므로 새로 insert하면 제약 위반이 난다.
+     */
+    public ProgramEligibility markSucceeded(String extractionJson, String promptVersion,
+                                            String modelId, int promptChars, long elapsedMs) {
+        this.status = ExtractionStatus.EXTRACTED;
+        this.extraction = extractionJson;
+        this.promptVersion = promptVersion;
+        this.modelId = modelId;
+        this.promptChars = promptChars;
+        this.elapsedMs = (int) elapsedMs;
+        this.errorMessage = null;              // 성공했으므로 이전 실패 사유는 지운다
+        this.extractedAt = LocalDateTime.now();
+        this.attempts = this.attempts + 1;
+        return this;
+    }
+
+    /** 이미 있는 행을 실패로 갱신하고 시도 횟수를 올린다 */
+    public ProgramEligibility markFailed(String message, String promptVersion,
+                                         String modelId, int promptChars) {
+        this.status = ExtractionStatus.FAILED;
+        this.promptVersion = promptVersion;
+        this.modelId = modelId;
+        this.promptChars = promptChars;
+        this.errorMessage = truncate(message);
+        this.extractedAt = LocalDateTime.now();
+        this.attempts = this.attempts + 1;
+        return this;
+    }
+
+    private static String truncate(String message) {
+        return message == null ? null : message.substring(0, Math.min(message.length(), 500));
     }
 }

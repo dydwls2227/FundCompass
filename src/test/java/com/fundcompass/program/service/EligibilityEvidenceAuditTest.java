@@ -40,8 +40,8 @@ class EligibilityEvidenceAuditTest {
                 .filter(row -> row.getExtraction() != null)
                 .toList();
 
-        int clean = 0, partial = 0, broken = 0, noEvidence = 0;
-        int totalLines = 0, matchedLines = 0;
+        int clean = 0, partial = 0, broken = 0, noEvidence = 0, unverifiable = 0;
+        int totalLines = 0, matchedLines = 0, skippedLines = 0;
         List<String> problems = new ArrayList<>();
 
         for (ProgramEligibility row : rows) {
@@ -69,6 +69,17 @@ class EligibilityEvidenceAuditTest {
                             row.getProgramId(), condition.name(), condition.status()));
                     continue;
                 }
+                skippedLines += result.skipped();
+
+                // 근거는 줬으나 "중소기업"처럼 짧아 대조가 무의미한 경우. 원칙 위반이 아니라 판정 보류다
+                if (result.unverifiable()) {
+                    unverifiable++;
+                    problems.add(String.format("[%d] %-6s 검증 불가 (근거가 %d자) — %s",
+                            row.getProgramId(), condition.name(),
+                            EvidenceVerifier.squeeze(condition.evidence()).length(),
+                            condition.evidence()));
+                    continue;
+                }
                 totalLines += result.checked();
                 matchedLines += result.matched();
 
@@ -87,16 +98,18 @@ class EligibilityEvidenceAuditTest {
             }
         }
 
-        int conditions = clean + partial + broken + noEvidence;
+        int conditions = clean + partial + broken + noEvidence + unverifiable;
         System.out.println("=".repeat(78));
         System.out.printf("추출 성공 %d건 / 판정된 조건 %d개%n", rows.size(), conditions);
         System.out.println("-".repeat(78));
         System.out.printf("  전부 일치   %3d  (%.1f%%)%n", clean, pct(clean, conditions));
         System.out.printf("  부분 일치   %3d  (%.1f%%)%n", partial, pct(partial, conditions));
         System.out.printf("  전부 불일치 %3d  (%.1f%%)   <- 환각 의심%n", broken, pct(broken, conditions));
+        System.out.printf("  검증 불가   %3d  (%.1f%%)   <- 근거가 너무 짧음 (판정 보류)%n",
+                unverifiable, pct(unverifiable, conditions));
         System.out.printf("  근거 없음   %3d  (%.1f%%)   <- 원칙 위반%n", noEvidence, pct(noEvidence, conditions));
-        System.out.printf("%n  줄 단위 일치 %d/%d (%.1f%%)%n",
-                matchedLines, totalLines, pct(matchedLines, totalLines));
+        System.out.printf("%n  줄 단위 일치 %d/%d (%.1f%%)   대조 생략 %d줄%n",
+                matchedLines, totalLines, pct(matchedLines, totalLines), skippedLines);
 
         if (!problems.isEmpty()) {
             System.out.println("-".repeat(78));
