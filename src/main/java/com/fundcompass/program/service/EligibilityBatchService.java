@@ -65,7 +65,9 @@ public class EligibilityBatchService {
             }
             List<ProgramDocument> documents = documentRepository
                     .findByProgramIdAndStatus(programId, ExtractionStatus.EXTRACTED);
-            int promptChars = extractor.buildPrompt(program, documents).length();
+            // 모델에 보낸 것과 같은 문자열이라야 evidence 대조가 성립한다
+            String source = extractor.buildPrompt(program, documents);
+            int promptChars = source.length();
 
             long started = System.currentTimeMillis();
             try {
@@ -73,12 +75,19 @@ public class EligibilityBatchService {
                 String json = objectMapper.writeValueAsString(result);
                 long elapsed = System.currentTimeMillis() - started;
 
+                List<String> unverified =
+                        EligibilityVerification.unmatchedFields(result, source);
+                if (!unverified.isEmpty()) {
+                    log.warn("근거 미확인 - F4 판정에서 제외 (programId={}): {}", programId, unverified);
+                }
+
                 // 이전 실패로 행이 남아 있을 수 있다. 공고당 1행이라 insert하면 유니크 제약 위반이다
                 eligibilityRepository.save(eligibilityRepository.findByProgramId(programId)
                         .map(row -> row.markSucceeded(
-                                json, PROMPT_VERSION, modelId, promptChars, elapsed))
+                                json, PROMPT_VERSION, modelId, promptChars, elapsed, unverified))
                         .orElseGet(() -> ProgramEligibility.succeeded(
-                                programId, json, PROMPT_VERSION, modelId, promptChars, elapsed)));
+                                programId, json, PROMPT_VERSION, modelId, promptChars,
+                                elapsed, unverified)));
                 extracted++;
             } catch (Exception e) {
                 String quotaCause = quotaCauseOf(e);

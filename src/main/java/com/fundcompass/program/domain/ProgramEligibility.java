@@ -9,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -59,6 +60,10 @@ public class ProgramEligibility {
     @Column(nullable = false)
     private Integer attempts;
 
+    /** evidence 대조에 실패해 F4가 신뢰하면 안 되는 필드(쉼표 구분). 없으면 null */
+    @Column(name = "unverified_fields", length = 200)
+    private String unverifiedFields;
+
     @Column(name = "extracted_at")
     private LocalDateTime extractedAt;
 
@@ -73,7 +78,8 @@ public class ProgramEligibility {
 
     public static ProgramEligibility succeeded(Long programId, String extractionJson,
                                                String promptVersion, String modelId,
-                                               int promptChars, long elapsedMs) {
+                                               int promptChars, long elapsedMs,
+                                               List<String> unverifiedFields) {
         return ProgramEligibility.builder()
                 .programId(programId)
                 .status(ExtractionStatus.EXTRACTED)
@@ -83,6 +89,7 @@ public class ProgramEligibility {
                 .promptChars(promptChars)
                 .elapsedMs((int) elapsedMs)
                 .attempts(1)
+                .unverifiedFields(join(unverifiedFields))
                 .extractedAt(LocalDateTime.now())
                 .build();
     }
@@ -107,7 +114,8 @@ public class ProgramEligibility {
      * 공고당 1행(유니크 제약)이므로 새로 insert하면 제약 위반이 난다.
      */
     public ProgramEligibility markSucceeded(String extractionJson, String promptVersion,
-                                            String modelId, int promptChars, long elapsedMs) {
+                                            String modelId, int promptChars, long elapsedMs,
+                                            List<String> unverifiedFields) {
         this.status = ExtractionStatus.EXTRACTED;
         this.extraction = extractionJson;
         this.promptVersion = promptVersion;
@@ -115,6 +123,7 @@ public class ProgramEligibility {
         this.promptChars = promptChars;
         this.elapsedMs = (int) elapsedMs;
         this.errorMessage = null;              // 성공했으므로 이전 실패 사유는 지운다
+        this.unverifiedFields = join(unverifiedFields);
         this.extractedAt = LocalDateTime.now();
         this.attempts = this.attempts + 1;
         return this;
@@ -135,5 +144,24 @@ public class ProgramEligibility {
 
     private static String truncate(String message) {
         return message == null ? null : message.substring(0, Math.min(message.length(), 500));
+    }
+
+    /**
+     * 검증 기준이 바뀌었을 때 판정만 다시 반영한다.
+     * 추출을 다시 한 것이 아니므로 {@code attempts}와 {@code extractedAt}은 건드리지 않는다.
+     */
+    public ProgramEligibility reverified(List<String> unverifiedFields) {
+        this.unverifiedFields = join(unverifiedFields);
+        return this;
+    }
+
+    private static String join(List<String> fields) {
+        return fields == null || fields.isEmpty() ? null : String.join(",", fields);
+    }
+
+    /** F4가 판정에서 제외해야 하는 필드 */
+    public List<String> unverifiedFieldList() {
+        return unverifiedFields == null || unverifiedFields.isBlank()
+                ? List.of() : List.of(unverifiedFields.split(","));
     }
 }

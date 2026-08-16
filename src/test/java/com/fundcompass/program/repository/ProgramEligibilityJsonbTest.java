@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 class ProgramEligibilityJsonbTest {
 
@@ -26,7 +28,7 @@ class ProgramEligibilityJsonbTest {
         repository.flush();
 
         repository.save(ProgramEligibility.succeeded(
-                PROGRAM_ID, JSON, "v1", "gemini-2.5-flash", 4415, 12103));
+                PROGRAM_ID, JSON, "v1", "gemini-2.5-flash", 4415, 12103, List.of()));
         entityManager.flush();
         entityManager.clear();
 
