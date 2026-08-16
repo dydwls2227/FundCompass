@@ -45,7 +45,9 @@ public record EligibilityExtraction(
             @JsonPropertyDescription("max 값 자체가 허용되면 true(이하·이내), 허용되지 않으면 false(미만). max가 null이면 true")
             boolean maxInclusive,
 
-            @JsonPropertyDescription("판단 근거가 된 문서 원문. 반드시 원문 그대로 인용. UNKNOWN이면 null")
+            @JsonPropertyDescription("판단 근거가 된 문서의 문장을 그대로 인용."
+                    + " 답(values·숫자)을 다시 적는 칸이 아니라 그 값을 읽어낸 자리를 가리키는 칸이다."
+                    + " 원문에 연속으로 존재하는 구간만 적는다. UNKNOWN이면 null")
             String evidence
     ) {}
 
@@ -57,7 +59,9 @@ public record EligibilityExtraction(
             @JsonPropertyDescription("허용되는 값 목록. SPECIFIED가 아니면 빈 배열")
             List<String> values,
 
-            @JsonPropertyDescription("판단 근거가 된 문서 원문. 반드시 원문 그대로 인용. UNKNOWN이면 null")
+            @JsonPropertyDescription("판단 근거가 된 문서의 문장을 그대로 인용."
+                    + " 답(values·숫자)을 다시 적는 칸이 아니라 그 값을 읽어낸 자리를 가리키는 칸이다."
+                    + " 원문에 연속으로 존재하는 구간만 적는다. UNKNOWN이면 null")
             String evidence
     ) {}
 }

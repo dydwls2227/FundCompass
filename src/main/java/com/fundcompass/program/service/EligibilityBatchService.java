@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EligibilityBatchService {
 
-    static final String PROMPT_VERSION = "v3";
+    static final String PROMPT_VERSION = "v4";
     private static final long CALL_INTERVAL_MS = 6_500;   // RPM 10 -> 6초 + 여유
 
     // 이 횟수까지 실패하면 데이터 문제로 보고 포기한다. 그 전까지는 일시적 오류일 수 있어 다시 도전한다
