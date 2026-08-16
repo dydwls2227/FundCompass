@@ -32,6 +32,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-database-postgresql'// flyway
     implementation 'org.apache.pdfbox:pdfbox:3.0.7' // pdf
+    implementation platform('org.springframework.ai:spring-ai-bom:2.0.0')
+    implementation 'org.springframework.ai:spring-ai-starter-model-google-genai' // gemini
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql' // db
 	annotationProcessor 'org.projectlombok:lombok'

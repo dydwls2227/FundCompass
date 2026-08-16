@@ -12,5 +12,7 @@ public interface ProgramDocumentRepository extends JpaRepository<ProgramDocument
 
     List<ProgramDocument> findByStatus(ExtractionStatus status);
 
+    List<ProgramDocument> findByProgramIdAndStatus(Long programId, ExtractionStatus status);
+
     long countByStatus(ExtractionStatus status);
 }

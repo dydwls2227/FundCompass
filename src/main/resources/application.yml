@@ -18,6 +18,16 @@ spring:
         format_sql: true
     open-in-view: false
 
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:}
+        chat:
+          model: ${GEMINI_MODEL:gemini-2.5-flash}
+          temperature: 0.0
+          max-output-tokens: 8192
+          thinking-budget: 0
+
 logging:
   level:
     org.hibernate.SQL: info
