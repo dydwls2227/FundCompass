@@ -15,6 +15,15 @@ import java.util.regex.Pattern;
 @Service
 public class EligibilityExtractor {
 
+    /**
+     * 아래 {@link #SYSTEM_PROMPT}를 고치면 <b>반드시 함께 올린다.</b>
+     * 버전이 그대로면 서로 다른 프롬프트로 뽑힌 행이 같은 라벨을 달아 비교가 불가능해진다.
+     *
+     * <p>배치 서비스에 두었다가 실제로 한 번 놓쳤다(v4 라벨에 두 가지 프롬프트가 섞였다).
+     * 고칠 파일과 올릴 값이 떨어져 있는 것이 원인이라 프롬프트 바로 옆으로 옮겼다.
+     */
+    public static final String PROMPT_VERSION = "v5";
+
     private static final String SYSTEM_PROMPT = """
             너는 정부 지원사업 공고문에서 신청 자격요건을 추출하는 도구다.
 

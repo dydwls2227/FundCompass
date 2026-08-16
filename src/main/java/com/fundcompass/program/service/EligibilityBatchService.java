@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EligibilityBatchService {
 
-    static final String PROMPT_VERSION = "v4";
     private static final long CALL_INTERVAL_MS = 6_500;   // RPM 10 -> 6초 + 여유
 
     // 이 횟수까지 실패하면 데이터 문제로 보고 포기한다. 그 전까지는 일시적 오류일 수 있어 다시 도전한다
@@ -53,6 +52,7 @@ public class EligibilityBatchService {
 
 
     public BatchResult extractPending(int limit) {
+        String version = EligibilityExtractor.PROMPT_VERSION;
         List<Long> targets = findTargets();
         int total = targets.size();
         int extracted = 0, failed = 0;
@@ -83,11 +83,10 @@ public class EligibilityBatchService {
 
                 // 이전 실패로 행이 남아 있을 수 있다. 공고당 1행이라 insert하면 유니크 제약 위반이다
                 eligibilityRepository.save(eligibilityRepository.findByProgramId(programId)
-                        .map(row -> row.markSucceeded(
-                                json, PROMPT_VERSION, modelId, promptChars, elapsed, unverified))
-                        .orElseGet(() -> ProgramEligibility.succeeded(
-                                programId, json, PROMPT_VERSION, modelId, promptChars,
-                                elapsed, unverified)));
+                        .map(row -> row.markSucceeded(json, version,
+                                modelId, promptChars, elapsed, unverified))
+                        .orElseGet(() -> ProgramEligibility.succeeded(programId, json, version,
+                                modelId, promptChars, elapsed, unverified)));
                 extracted++;
             } catch (Exception e) {
                 String quotaCause = quotaCauseOf(e);
@@ -104,9 +103,9 @@ public class EligibilityBatchService {
                 try {
                     eligibilityRepository.save(eligibilityRepository.findByProgramId(programId)
                             .map(row -> row.markFailed(
-                                    e.getMessage(), PROMPT_VERSION, modelId, promptChars))
+                                    e.getMessage(), version, modelId, promptChars))
                             .orElseGet(() -> ProgramEligibility.failed(
-                                    programId, e.getMessage(), PROMPT_VERSION, modelId, promptChars)));
+                                    programId, e.getMessage(), version, modelId, promptChars)));
                 } catch (Exception ignored) {
                 }
             }
