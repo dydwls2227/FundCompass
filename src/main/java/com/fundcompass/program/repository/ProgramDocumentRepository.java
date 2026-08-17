@@ -1,5 +1,6 @@
 package com.fundcompass.program.repository;
 
+import com.fundcompass.program.domain.DocumentFileType;
 import com.fundcompass.program.domain.ExtractionStatus;
 import com.fundcompass.program.domain.ProgramDocument;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,9 @@ public interface ProgramDocumentRepository extends JpaRepository<ProgramDocument
     List<ProgramDocument> findByStatus(ExtractionStatus status);
 
     List<ProgramDocument> findByProgramIdAndStatus(Long programId, ExtractionStatus status);
+
+    List<ProgramDocument> findByFileTypeAndStatus(DocumentFileType fileType,
+                                                  ExtractionStatus status);
 
     long countByStatus(ExtractionStatus status);
 }

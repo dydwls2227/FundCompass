@@ -15,20 +15,8 @@ public class PdfTextExtractor {
         try(PDDocument document = Loader.loadPDF(pdfBytes)) {
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
-            return normalize(stripper.getText(document));
+            return DocumentText.normalize(stripper.getText(document));
         }
     }
 
-    // 공백,줄바꿈을 정리하여 LLM 입력 토큰 줄임
-    private String normalize(String raw) {
-        if(raw==null){
-            return "";
-        }
-        return raw.replaceAll("[ \\t\\x0B\\f\\r]+", " ")
-                .replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "")
-                .replaceAll("[ \\t\\x0B\\f\\r]+", " ")
-                .replaceAll("\\n{3,}", "\n\n")
-                .trim();
-
-    }
 }

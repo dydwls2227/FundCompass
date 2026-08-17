@@ -24,7 +24,11 @@ public enum DocumentFileType {
         };
     }
 
+    /**
+     * IMAGE는 OCR 범위 밖이라 제외한다(122건, 전체의 4%).
+     * OTHER는 zip·xlsx 등이라 공고문 본문이 들어 있지 않다.
+     */
     public boolean isExtractable() {
-        return this == PDF;
+        return this == PDF || this == HWP;
     }
 }

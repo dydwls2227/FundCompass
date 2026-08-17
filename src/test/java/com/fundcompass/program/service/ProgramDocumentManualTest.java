@@ -1,5 +1,6 @@
 package com.fundcompass.program.service;
 
+import com.fundcompass.program.domain.DocumentFileType;
 import com.fundcompass.program.domain.ExtractionStatus;
 import com.fundcompass.program.repository.ProgramDocumentRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -43,6 +44,37 @@ class ProgramDocumentManualTest {
         var result = programDocumentService.extractPending(Integer.MAX_VALUE);
         System.out.println("=".repeat(60));
         System.out.println("추출 결과: " + result);
+        System.out.println("=".repeat(60));
+    }
+
+    /**
+     * HWP 파서가 붙기 전 UNSUPPORTED로 확정된 문서를 추출 대기로 되돌린다.
+     * 이 테스트만으로는 추출하지 않는다 — 되돌린 뒤 {@code 추출_전체}를 실행한다.
+     */
+    @Test
+    @DisplayName("HWP 미지원 문서를 추출 대기로 되돌린다")
+    void HWP_재개() {
+        int reopened = programDocumentService.reopenUnsupported(DocumentFileType.HWP);
+        System.out.println("=".repeat(60));
+        System.out.printf("되돌림 %,d건%n", reopened);
+        System.out.printf("PENDING %,d / UNSUPPORTED %,d%n",
+                documentRepository.countByStatus(ExtractionStatus.PENDING),
+                documentRepository.countByStatus(ExtractionStatus.UNSUPPORTED));
+        System.out.println("=".repeat(60));
+    }
+
+    @Test
+    @DisplayName("문서 상태·형식별 현황")
+    void 현황() {
+        System.out.println("=".repeat(60));
+        for (DocumentFileType type : DocumentFileType.values()) {
+            for (ExtractionStatus status : ExtractionStatus.values()) {
+                int count = documentRepository.findByFileTypeAndStatus(type, status).size();
+                if (count > 0) {
+                    System.out.printf("  %-6s %-12s %,6d%n", type, status, count);
+                }
+            }
+        }
         System.out.println("=".repeat(60));
     }
 }

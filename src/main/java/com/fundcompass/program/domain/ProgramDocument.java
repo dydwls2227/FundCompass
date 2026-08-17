@@ -73,6 +73,13 @@ public class ProgramDocument {
         this.extractedAt = LocalDateTime.now();
     }
 
+    /** 파서가 새로 붙어 "미지원" 판정이 무효가 됐을 때 추출 대기로 되돌린다 */
+    public void markPending() {
+        this.status = ExtractionStatus.PENDING;
+        this.errorMessage = null;
+        this.extractedAt = null;
+    }
+
     public void markFailed(String message) {
         this.status = ExtractionStatus.FAILED;
         this.errorMessage = message == null ? null

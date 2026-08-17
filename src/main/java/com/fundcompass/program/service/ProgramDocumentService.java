@@ -2,6 +2,7 @@ package com.fundcompass.program.service;
 
 import com.fundcompass.program.domain.*;
 import com.fundcompass.program.infra.FileDownloader;
+import com.fundcompass.program.infra.HwpTextExtractor;
 import com.fundcompass.program.infra.PdfTextExtractor;
 import com.fundcompass.program.repository.ProgramDocumentRepository;
 import com.fundcompass.program.repository.ProgramRepository;
@@ -24,6 +25,7 @@ public class ProgramDocumentService {
     private final ProgramDocumentRepository documentRepository;
     private final FileDownloader fileDownloader;
     private final PdfTextExtractor pdfTextExtractor;
+    private final HwpTextExtractor hwpTextExtractor;
 
     public record RegisterResult(int created, int skipped, int noFile) {}
 
@@ -106,7 +108,17 @@ public class ProgramDocumentService {
             }
             try {
                 byte[] bytes = fileDownloader.download(document.getFileUrl());
-                String text = pdfTextExtractor.extract(bytes);
+                String text = extractText(document.getFileType(), bytes);
+
+                // 빈 텍스트를 EXTRACTED로 찍으면 "성공했는데 내용이 없는" 행이 남는다.
+                // 2-2에서 그렇게 쌓인 146건이 "텍스트 확보 910건"이라는 낙관적 수치를 만들었다
+                if (text.isBlank()) {
+                    document.markUnsupported();
+                    documentRepository.save(document);
+                    unsupported++;
+                    sleep();
+                    continue;
+                }
                 document.markExtracted(text);
                 documentRepository.save(document);
                 extracted++;
@@ -125,6 +137,34 @@ public class ProgramDocumentService {
         ExtractResult result = new ExtractResult(extracted, unsupported, failed);
         log.info("텍스트 추출 완료 - 성공 {}, 미지원 {}, 실패 {}", extracted, unsupported, failed);
         return result;
+    }
+
+    private String extractText(DocumentFileType fileType, byte[] bytes) throws Exception {
+        return switch (fileType) {
+            case PDF -> pdfTextExtractor.extract(bytes);
+            case HWP -> hwpTextExtractor.extract(bytes);
+            default -> throw new IllegalStateException("추출 대상이 아닌 형식: " + fileType);
+        };
+    }
+
+    /**
+     * 이미 {@code UNSUPPORTED}로 확정된 문서를 다시 추출 대기로 돌린다.
+     *
+     * <p>파서를 새로 붙이면 "지원하지 않음"의 의미가 달라진다. HWP 1,781건이 그 경우다.
+     * 마이그레이션으로 한 번에 UPDATE하지 않고 메서드로 둔 이유는, 파서를 추가할 때마다
+     * 같은 일이 반복되고 <b>몇 건이 되돌려졌는지 확인하며</b> 실행하는 편이 안전하기 때문이다.
+     *
+     * @return 되돌린 문서 수
+     */
+    public int reopenUnsupported(DocumentFileType fileType) {
+        List<ProgramDocument> targets = documentRepository
+                .findByFileTypeAndStatus(fileType, ExtractionStatus.UNSUPPORTED);
+
+        targets.forEach(ProgramDocument::markPending);
+        documentRepository.saveAll(targets);
+
+        log.info("추출 재개 대상으로 되돌림 - {} {}건", fileType, targets.size());
+        return targets.size();
     }
 
     private void sleep() {

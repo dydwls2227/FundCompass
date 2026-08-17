@@ -38,6 +38,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-database-postgresql'// flyway
     implementation 'org.apache.pdfbox:pdfbox:3.0.7' // pdf
+    // hwp 바이너리(CFBF). hwpx는 ZIP+XML이라 JDK만으로 읽으므로 hwpxlib을 쓰지 않는다
+    // (hwpxlib 1.0.5에는 텍스트 추출기가 없고 파일 경로만 받는다)
+    implementation 'kr.dogfoot:hwplib:1.1.9'
     implementation platform('org.springframework.ai:spring-ai-bom:2.0.0')
     implementation 'org.springframework.ai:spring-ai-starter-model-google-genai' // gemini
 	compileOnly 'org.projectlombok:lombok'
