@@ -29,6 +29,11 @@ tasks.named('test') {
             systemProperty key, System.getProperty(key)
         }
     }
+
+    // 이 프로젝트의 테스트는 대부분 DB와 외부 API를 건드린다. 소스가 그대로여도 외부 상태는
+    // 바뀌므로 Gradle의 UP-TO-DATE 판정이 틀린다. 실제로 크레딧 충전 후 재실행이
+    // 조용히 건너뛰어져 "왜 아무 일도 안 일어나나"를 한참 찾았다.
+    outputs.upToDateWhen { false }
 }
 
 dependencies {
