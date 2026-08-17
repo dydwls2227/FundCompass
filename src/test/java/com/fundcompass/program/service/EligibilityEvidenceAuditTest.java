@@ -44,7 +44,7 @@ class EligibilityEvidenceAuditTest {
 
         Map<EligibilityVerification.Verdict, Integer> tally =
                 new EnumMap<>(EligibilityVerification.Verdict.class);
-        int totalLines = 0, matchedLines = 0, skippedLines = 0;
+        int totalLines = 0, matchedLines = 0, skippedLines = 0, reorderedLines = 0;
         int staleRows = 0;
         List<String> problems = new ArrayList<>();
 
@@ -68,12 +68,13 @@ class EligibilityEvidenceAuditTest {
                 totalLines += verdict.result().checked();
                 matchedLines += verdict.result().matched();
                 skippedLines += verdict.result().skipped();
+                reorderedLines += verdict.result().reordered();
 
                 if (verdict.verdict() != EligibilityVerification.Verdict.MATCHED) {
                     problems.add(String.format("[%d] %-14s %-13s %s",
                             row.getProgramId(), verdict.field(), verdict.verdict(),
-                            verdict.result().missing().isEmpty()
-                                    ? "" : verdict.result().missing().getFirst()));
+                            verdict.result().altered().isEmpty()
+                                    ? "" : verdict.result().altered().getFirst()));
                 }
             }
 
@@ -96,8 +97,9 @@ class EligibilityEvidenceAuditTest {
             System.out.printf("  %-14s %3d  (%.1f%%)   %s%n",
                     verdict, count, pct(count, conditions), note(verdict));
         }
-        System.out.printf("%n  줄 단위 일치 %d/%d (%.1f%%)   대조 생략 %d줄%n",
-                matchedLines, totalLines, pct(matchedLines, totalLines), skippedLines);
+        System.out.printf("%n  줄 단위 연속 일치 %d/%d (%.1f%%)   재배열 %d줄   대조 생략 %d줄%n",
+                matchedLines, totalLines, pct(matchedLines, totalLines),
+                reorderedLines, skippedLines);
         System.out.printf("  저장값 불일치 %d행%n", staleRows);
 
         if (!problems.isEmpty()) {
@@ -149,7 +151,8 @@ class EligibilityEvidenceAuditTest {
     private String note(EligibilityVerification.Verdict verdict) {
         return switch (verdict) {
             case MATCHED -> "";
-            case UNMATCHED -> "<- 환각 의심. F4 판정에서 제외됨";
+            case REORDERED -> "<- 표를 건너뛰며 읽음. 조각 전부 원문 존재 (F4 사용, F7 검수)";
+            case ALTERED -> "<- 글자를 바꿔 적음. F4 판정에서 제외됨";
             case UNVERIFIABLE -> "<- 근거가 너무 짧음 (판정 보류)";
             case MISSING -> "<- 원칙 위반. F4 판정에서 제외됨";
         };

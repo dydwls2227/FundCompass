@@ -19,10 +19,15 @@ import java.util.List;
 public final class EligibilityVerification {
 
     public enum Verdict {
-        /** 근거가 원문에 있다 */
+        /** 근거가 원문에 연속으로 존재한다 */
         MATCHED,
-        /** 근거가 원문에 없다. 신뢰 불가 */
-        UNMATCHED,
+        /**
+         * 연속은 아니지만 조각 전부가 원문에 있다. PDF 표가 열이 뒤엉켜 추출되는 탓이며,
+         * 모델이 표를 <b>올바르게</b> 읽은 경우다. 신뢰하되 F7 검수 대상으로 표시한다.
+         */
+        REORDERED,
+        /** 조각이 짧게 끊긴다. 글자를 바꿔 적었다는 뜻이므로 신뢰 불가 */
+        ALTERED,
         /** 근거가 너무 짧아 대조가 무의미하다 (예: "중소기업"). 판정 보류 */
         UNVERIFIABLE,
         /** SPECIFIED/NOT_REQUIRED인데 근거를 대지 않았다. 프롬프트 원칙 위반 */
@@ -50,14 +55,21 @@ public final class EligibilityVerification {
     }
 
     /**
-     * 근거가 원문에 없어 F4가 신뢰하면 안 되는 필드 이름.
+     * 근거를 신뢰할 수 없어 F4가 판정에서 빼야 하는 필드 이름.
      *
-     * <p>{@link Verdict#UNVERIFIABLE}은 포함하지 않는다. 짧아서 검증을 못 한 것이지
+     * <p>제외하는 것은 {@link Verdict#ALTERED}(글자를 바꿔 적음)와
+     * {@link Verdict#MISSING}(근거 없음) 둘뿐이다.
+     *
+     * <p>{@link Verdict#REORDERED}는 제외하지 않는다. 조각 전부가 원문에 있고, PDF 표가
+     * 뒤엉켜 추출되는 것은 우리 파서의 한계이지 모델의 잘못이 아니다. 실측에서 이것을
+     * 환각으로 몰아 정확한 조건 4건을 버리고 있었다.
+     *
+     * <p>{@link Verdict#UNVERIFIABLE}도 제외하지 않는다. 짧아서 검증을 못 한 것이지
      * 틀렸다는 증거는 없다. 근거 없이 값을 버리는 것도 추측이다.
      */
     public static List<String> unmatchedFields(EligibilityExtraction extraction, String source) {
         return verify(extraction, source).stream()
-                .filter(verdict -> verdict.verdict() == Verdict.UNMATCHED
+                .filter(verdict -> verdict.verdict() == Verdict.ALTERED
                         || verdict.verdict() == Verdict.MISSING)
                 .map(FieldVerdict::field)
                 .toList();
@@ -91,8 +103,10 @@ public final class EligibilityVerification {
             verdict = Verdict.UNVERIFIABLE;
         } else if (result.allMatched()) {
             verdict = Verdict.MATCHED;
+        } else if (result.faithful()) {
+            verdict = Verdict.REORDERED;      // 조각은 전부 원문에 있다
         } else {
-            verdict = Verdict.UNMATCHED;      // 부분 일치도 신뢰하지 않는다
+            verdict = Verdict.ALTERED;        // 한 줄이라도 각색됐으면 그 조건은 신뢰하지 않는다
         }
         target.add(new FieldVerdict(field, status, verdict, result));
     }

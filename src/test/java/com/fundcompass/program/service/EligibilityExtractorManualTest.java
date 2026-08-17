@@ -112,12 +112,12 @@ class EligibilityExtractorManualTest {
             System.out.println("               🚨 근거 없음");
             return;
         }
-        System.out.printf("               %s %d/%d줄  %s%n",
-                result.allMatched() ? "✅" : "🚨",
-                result.matched(), result.checked(),
+        System.out.printf("               %s 연속 %d/%d줄  재배열 %d줄  %s%n",
+                result.allMatched() ? "✅" : result.faithful() ? "↔" : "🚨",
+                result.matched(), result.checked(), result.reordered(),
                 evidence.replace("\n", " ⏎ "));
-        result.missing().forEach(line ->
-                System.out.printf("                  ↳ 원문에 없음: %s%n", line));
+        result.altered().forEach(line ->
+                System.out.printf("                  ↳ 각색됨: %s%n", line));
     }
 
     private Program pickProgram(int minDocuments) {
