@@ -167,6 +167,32 @@ public class ProgramDocumentService {
         return targets.size();
     }
 
+    /**
+     * {@code EXTRACTED}인데 텍스트가 빈 문서를 추출 대기로 돌린다.
+     *
+     * <p>과거에 {@code markExtracted("")}가 성공으로 기록되던 탓에 남은 행이다.
+     * 재추출하면 지금 코드가 {@code UNSUPPORTED}로 정확히 분류한다.
+     *
+     * <p>{@code findTargets()}가 이미 빈 텍스트를 걸러내므로 기능상 급하지는 않다.
+     * 다만 상태값이 거짓이면 "텍스트 확보 몇 건"을 셀 때마다 낙관적 수치가 나온다
+     * (2-1의 "910건"이 실제로는 832건이었던 것이 이 때문이다).
+     *
+     * @return 되돌린 문서 수
+     */
+    public int reopenEmptyExtracted() {
+        List<ProgramDocument> targets = documentRepository
+                .findByStatus(ExtractionStatus.EXTRACTED).stream()
+                .filter(document -> document.getExtractedText() == null
+                        || document.getExtractedText().isBlank())
+                .toList();
+
+        targets.forEach(ProgramDocument::markPending);
+        documentRepository.saveAll(targets);
+
+        log.info("빈 텍스트 문서를 추출 대기로 되돌림 - {}건", targets.size());
+        return targets.size();
+    }
+
     private void sleep() {
         try {
             Thread.sleep(DOWNLOAD_INTERVAL_MS);

@@ -63,6 +63,23 @@ class ProgramDocumentManualTest {
         System.out.println("=".repeat(60));
     }
 
+    /**
+     * EXTRACTED인데 텍스트가 빈 문서를 되돌린다. 이 테스트는 추출하지 않는다 —
+     * 되돌린 뒤 {@code 추출_전체}를 실행한다.
+     */
+    @Test
+    @DisplayName("빈 텍스트 문서를 추출 대기로 되돌린다")
+    void 빈텍스트_재개() {
+        int reopened = programDocumentService.reopenEmptyExtracted();
+        System.out.println("=".repeat(60));
+        System.out.printf("되돌림 %,d건%n", reopened);
+        System.out.printf("PENDING %,d / EXTRACTED %,d / UNSUPPORTED %,d%n",
+                documentRepository.countByStatus(ExtractionStatus.PENDING),
+                documentRepository.countByStatus(ExtractionStatus.EXTRACTED),
+                documentRepository.countByStatus(ExtractionStatus.UNSUPPORTED));
+        System.out.println("=".repeat(60));
+    }
+
     @Test
     @DisplayName("문서 상태·형식별 현황")
     void 현황() {
