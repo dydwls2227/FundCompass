@@ -1,0 +1,32 @@
+# EC2 프리티어(t3.micro, 1GB)용 systemd 유닛.
+# /etc/systemd/system/fundcompass.service 로 복사한다.
+[Unit]
+Description=FundCompass API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/fundcompass
+
+# 비밀값은 파일로 주입한다. 이 파일만 chmod 600 으로 보호하면 된다
+EnvironmentFile=/opt/fundcompass/.env
+
+# 1GB 머신이다. 힙을 명시하지 않으면 JVM이 과하게 잡아 OOM으로 죽는다.
+# SerialGC 는 코어 1개짜리에서 G1보다 메모리를 덜 쓴다
+ExecStart=/usr/bin/java \
+  -Xms256m -Xmx512m \
+  -XX:+UseSerialGC \
+  -XX:MaxMetaspaceSize=192m \
+  -Dfile.encoding=UTF-8 \
+  -Duser.timezone=Asia/Seoul \
+  -jar /opt/fundcompass/app.jar
+
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/fundcompass.log
+StandardError=append:/var/log/fundcompass.log
+
+[Install]
+WantedBy=multi-user.target

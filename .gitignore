@@ -57,3 +57,9 @@ frontend/.next/
 frontend/out/
 frontend/.env*.local
 .claude/
+
+# ── 배포 산출물 (커밋 금지) ──
+deploy/*.sql
+deploy/.env
+*.jar
+!gradle/wrapper/*.jar
