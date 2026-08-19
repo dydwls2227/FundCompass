@@ -83,6 +83,15 @@ public class Program {
     @Column(name = "attachment_name",length = 500)
     private String attachmentName;
 
+    @Column(name = "attachment_url", length = 500)
+    private String attachmentUrl;
+
+    @Column(name = "print_file_name",length = 500)
+    private String printFileName;
+
+    @Column(name = "print_file_url", length = 500)
+    private String printFileUrl;
+
     // 기업마당 기준 생성일시
     @Column(name = "source_created_at")
     private LocalDateTime sourceCreatedAt;
@@ -122,6 +131,9 @@ public class Program {
         this.deadlineType = source.deadlineType;
         this.contact = source.contact;
         this.attachmentName = source.attachmentName;
+        this.attachmentUrl = source.attachmentUrl;
+        this.printFileName = source.printFileName;
+        this.printFileUrl = source.printFileUrl;
         this.sourceCreatedAt = source.sourceCreatedAt;
         this.sourceUpdatedAt = source.sourceUpdatedAt;
     }

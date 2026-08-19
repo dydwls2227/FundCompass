@@ -15,6 +15,9 @@ public record BizinfoProgramItem(
         String hashtags,
         String refrncNm,
         String fileNm,
+        String flpthNm,
+        String printFileNm,
+        String printFlpthNm,
         String creatPnttm,
         String updtPnttm
 ) {

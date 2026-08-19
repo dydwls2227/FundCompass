@@ -36,6 +36,9 @@ public class BizinfoProgramMapper {
                 .applyMethod(item.reqstMthPapersCn())
                 .contact(truncate(item.refrncNm(), 500))
                 .attachmentName(truncate(item.fileNm(), 500))
+                .attachmentUrl(truncate(item.flpthNm(), 500))
+                .printFileName(truncate(item.printFileNm(), 500))
+                .printFileUrl(truncate(item.printFlpthNm(),500))
                 .sourceCreatedAt(parseDateTime(item.creatPnttm()))
                 .sourceUpdatedAt(parseDateTime(item.updtPnttm()))
                 .build();
