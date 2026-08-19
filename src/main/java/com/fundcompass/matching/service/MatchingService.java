@@ -96,6 +96,28 @@ public class MatchingService {
     }
 
     /**
+     * 공고 하나만 판정한다. 상세 조회(F5 설명 생성)용.
+     *
+     * @return 자격요건이 추출되지 않은 공고면 {@code null}
+     */
+    @Transactional(readOnly = true)
+    public ProgramMatch matchOne(Long programId, BusinessProfile profile) {
+        LocalDate today = LocalDate.now();
+        ProgramEligibility row = eligibilityRepository.findByProgramId(programId)
+                .filter(r -> r.getStatus() == ExtractionStatus.EXTRACTED)
+                .filter(r -> r.getExtraction() != null)
+                .orElse(null);
+        if (row == null) {
+            return null;
+        }
+        Program program = programRepository.findById(programId).orElse(null);
+        if (program == null) {
+            return null;
+        }
+        return ProgramMatch.of(program, matcher.match(row, profile, today), today);
+    }
+
+    /**
      * 적격 우선, 그다음 마감 임박순.
      *
      * <p>부적격이 60%를 넘으므로(지자체 사업이 많아 지역 조건에서 걸린다) 판정 순서가 없으면
