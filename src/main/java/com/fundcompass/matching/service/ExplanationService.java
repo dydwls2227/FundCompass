@@ -46,6 +46,7 @@ public class ExplanationService {
             - 존댓말. 전문용어를 풀어 쓴다.
             - 미충족이 있으면 무엇이 얼마나 모자란지 구체적으로 쓴다.
             - '신청 가능 시점'이 주어졌으면 그 날짜를 알려준다.
+            - 마감이 '이미 마감됨'이면 신청할 수 없다고 분명히 알린다.
             - 마지막에 한 문장으로 공고문 원문 확인을 권한다.
               우리 판정이 놓친 조건이 있을 수 있다.
             """;
@@ -101,10 +102,12 @@ public class ExplanationService {
         // 숫자만 주면 "0일"을 마감된 것으로 읽는다. 실제로는 오늘까지 신청 가능하다.
         // 해석을 모델에 맡기지 않고 문장으로 준다
         if (match.applyEndDate() != null && match.daysLeft() != null) {
-            prompt.append("[신청 마감] ").append(match.applyEndDate())
-                    .append(match.daysLeft() == 0 ? " (오늘까지 신청 가능)"
-                            : " (" + match.daysLeft() + "일 남음)")
-                    .append('\n');
+            // 음수를 그대로 주면 "-1일 남음"을 "하루 남았습니다"로 읽는다.
+            // 0일만 처리하고 음수를 빠뜨려 실제로 마감된 공고를 "신청 가능"으로 안내했다
+            String when = match.closed() ? " (이미 마감됨 — 신청할 수 없음)"
+                    : match.daysLeft() == 0 ? " (오늘까지 신청 가능)"
+                    : " (" + match.daysLeft() + "일 남음)";
+            prompt.append("[신청 마감] ").append(match.applyEndDate()).append(when).append('\n');
         }
         return prompt.toString();
     }

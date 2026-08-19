@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/*
+  자금나침반 디자인 토큰
+
+  성격: 정부 지원사업을 다루는 금융 서비스. 주최가 금융보안원이라 신뢰감이 우선이고,
+  화려함은 오히려 방해가 된다. 사용자는 소상공인이고 상당수가 모바일로 본다.
+
+  판정 색을 정할 때의 판단:
+  - 부적격에 빨강을 쓰지 않는다. 실측상 결과의 64%가 부적격인데(지자체 사업이 많아
+    지역에서 걸린다) 화면 절반이 빨강이면 적대적으로 읽히고, 부적격은 오류가 아니라
+    "이 공고는 당신 대상이 아니다"라는 중립적 사실이다. 회색으로 조용히 물러나게 한다.
+  - 적격은 초록, 확인필요는 호박색. 이 둘만 색을 가진다.
+*/
+:root {
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --border: #e6e5e1;
+  --ink: #1c1c1a;
+  --ink-soft: #57564f;
+  --ink-faint: #8a8880;
+
+  --brand: #1e4d5c;        /* 深청록 — 공공·금융의 신뢰감 */
+  --brand-soft: #eef4f5;
+
+  --ok: #1a7a4c;
+  --ok-soft: #e9f5ee;
+  --warn: #9a6314;
+  --warn-soft: #fdf3e2;
+  --mute: #6b6a63;
+  --mute-soft: #f2f1ee;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-mute: var(--mute);
+  --color-mute-soft: var(--mute-soft);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  /* 한글이 주 언어다. 시스템 한글 폰트가 웹폰트보다 읽기 좋고 로딩도 없다 */
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Pretendard", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;   /* 한글은 단어 단위로 줄바꿈해야 읽힌다 */
+  line-height: 1.65;
+}
+
+/* 숫자는 자릿수가 흔들리지 않게 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

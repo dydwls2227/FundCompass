@@ -44,6 +44,10 @@ bizinfo:
 
 
 fundcompass:
+  # 프론트엔드 오리진. 배포 시 Vercel 도메인을 콤마로 추가한다
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
   # F5 설명 생성 — 공고 추출용 키(spring.ai.google.genai)와 의도적으로 분리한다.
   # 사용자의 사업자 정보를 보내는 경로이므로 유료 키를 쓴다.
   # 비워두면 설명 없이 판정 결과만 반환한다 (서비스는 정상 동작).
